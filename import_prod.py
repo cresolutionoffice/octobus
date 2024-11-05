@@ -6,7 +6,7 @@ import re
 
 es = Elasticsearch(
     hosts=['https://db.octobus.tools.sap:443/'],
-    api_key=(<your own key>)
+    api_key=('<your_own_key')
 )
 
 def get_data_from_elastic():
@@ -14,23 +14,50 @@ def get_data_from_elastic():
     # source will specify which fields you want to write to a file
     # you can see the query directly in elasticsearch by going to octobus, click on inspect, click on request, and copy the query, replace only the correspoonding query lines below
     query = {
-    "_source" : ['_id', '_score'], 
+    "_source" : ['runlabel', 'eachTestResult', 'duration', 'env'],
     "query": {
     "bool": {
       "must": [],
       "filter": [
         {
-          "range": {
-            "@timestamp": {
-              "format": "strict_date_optional_time",
-              "gte": "2024-09-09T20:00:00.000Z",
-              "lte": "2024-09-10T20:40:00.833Z"
-            }
+          "bool": {
+            "filter": [
+              {
+                "bool": {
+                  "should": [
+                    {
+                      "term": {
+                        "project.keyword": {
+                          "value": "Post_RD_PW"
+                        }
+                      }
+                    }
+                  ],
+                  "minimum_should_match": 1
+                }
+              },
+              {
+                "bool": {
+                  "should": [
+                    {
+                      "match_phrase": {
+                        "step": "Quote load"
+                      }
+                    }
+                  ],
+                  "minimum_should_match": 1
+                }
+              }
+            ]
           }
         },
         {
-          "match_phrase": {
-            "project": "CPQ Error Logs"
+          "range": {
+            "@timestamp": {
+              "format": "strict_date_optional_time",
+              "gte": "2024-09-01T00:00:00.000Z",
+              "lte": "2024-09-30T23:59:59.033Z"
+            }
           }
         }
       ],
